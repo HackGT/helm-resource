@@ -8,3 +8,15 @@ serde = "0.8"
 serde_derive = "0.8"
 serde_json = "0.8"
 rustache = "0.1"
+
+[[bin]]
+name = "check"
+path = "src/bin/check.rs"
+
+[[bin]]
+name = "in"
+path = "src/bin/in.rs"
+
+[[bin]]
+name = "out"
+path = "src/bin/out.rs"
