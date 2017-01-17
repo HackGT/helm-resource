@@ -1,6 +1,9 @@
 apiVersion: v1
 clusters:
 - cluster:
+    {{#ca_data}}
+    certificate-authority-data: {{ca_data}}
+    {{/ca_data}}
     {{#skip_tls_verify}}
     insecure-skip-tls-verify: true
     {{/skip_tls_verify}}
