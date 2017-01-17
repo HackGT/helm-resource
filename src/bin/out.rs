@@ -6,7 +6,9 @@ mod concourse_api;
 #[path="../helm_api.rs"]
 mod helm_api;
 
-use std::collections::HashMap;
+use std::collections::{
+    HashMap,
+};
 use std::hash::Hash;
 use concourse_api::{
     OutRequest,
@@ -15,8 +17,20 @@ use concourse_api::{
 };
 use helm_api::{
     Helm,
+    Chart,
     Charts,
 };
+
+#[derive(Deserialize)]
+struct ChartSpec {
+    name: String,
+    version: Option<String>,
+}
+
+#[derive(Deserialize)]
+struct Params {
+    charts: HashMap<String, ChartSpec>,
+}
 
 #[derive(Debug)]
 struct Diff<E> {
@@ -57,7 +71,7 @@ where E: Eq + PartialEq,
 
 fn main() {
     // get request from concourse
-    let in_request: OutRequest<Charts> = concourse_api::receive_message().unwrap();
+    let mut in_request: OutRequest<Params> = concourse_api::receive_message().unwrap();
 
     // set up helm to connect to our cluster
     let helm = Helm::configure(in_request.source).unwrap();
@@ -65,36 +79,44 @@ fn main() {
     // get the list of deployed charts
     let deployed_charts = helm.list().unwrap();
 
+    // morph the charts rep into a friendly format
+    let target_charts: Charts = in_request.params.charts
+        .drain()
+        .map(|(k, v)| Chart {
+            release: k,
+            name: v.name,
+            version: v.version,
+        })
+        .collect();
+
     // get a diff of everything
-    let chart_diff = diff(deployed_charts, in_request.params, |c| c.release.to_string());
+    let chart_diff = diff(deployed_charts, target_charts, |c| c.release.to_string());
 
-    println!("{:?}", chart_diff);
+    for upgraded in chart_diff.changed {
+        helm.upgrade(&upgraded).unwrap();
+    }
 
-    // for upgraded in chart_diff.changed {
-    //     helm.upgrade(&upgraded).unwrap();
-    // }
-    //
-    // for deleted in chart_diff.removed {
-    //     helm.delete(&deleted.release).unwrap();
-    // }
-    //
-    // for added in chart_diff.added {
-    //     helm.install(&added).unwrap();
-    // }
-    //
-    // // send back a response
-    // // get the list of deployed charts
-    // let deployed_charts = helm.list().unwrap();
-    //
-    // // get the digest
-    // let digest = helm.digest().unwrap();
-    //
-    // // reply with a message
-    // let response = OutResponse {
-    //     version: Version {
-    //         digest: digest,
-    //     },
-    //     metadata: deployed_charts,
-    // };
-    // concourse_api::send_message(&response).unwrap();
+    for deleted in chart_diff.removed {
+        helm.delete(&deleted.release).unwrap();
+    }
+
+    for added in chart_diff.added {
+        helm.install(&added).unwrap();
+    }
+
+    // send back a response
+    // get the list of deployed charts
+    let deployed_charts = helm.list().unwrap();
+
+    // get the digest
+    let digest = helm.digest().unwrap();
+
+    // reply with a message
+    let response = OutResponse {
+        version: Version {
+            digest: digest,
+        },
+        metadata: deployed_charts,
+    };
+    concourse_api::send_message(&response).unwrap();
 }
