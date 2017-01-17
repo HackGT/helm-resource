@@ -36,11 +36,21 @@ pub type InRequest = CheckRequest;
 
 #[derive(Serialize)]
 pub struct InResponse<M>
-where M: Serialize
+where M: Serialize,
 {
     pub version: Version,
     pub metadata: M,
 }
+
+#[derive(Deserialize)]
+pub struct OutRequest<P>
+where P: Deserialize,
+{
+    pub source: Source,
+    pub params: P,
+}
+
+pub type OutResponse<M> = InResponse<M>;
 
 pub fn receive_message<T>() -> JsonResult<T>
 where T: Deserialize

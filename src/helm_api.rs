@@ -24,12 +24,14 @@ const KUBE_CONFIG: &'static str = include_str!("../templates/kube-config.mo");
 const KUBE_CONFIG_PATH: &'static str = "/tmp/kube-config";
 const BASH_PATH: &'static str = "/bin/bash";
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Chart {
     pub release: String,
     pub name: String,
-    pub version: String,
+    pub version: Option<String>,
 }
+
+pub type Charts = Vec<Chart>;
 
 pub struct Helm;
 
@@ -105,7 +107,7 @@ impl Helm {
 
                 Chart {
                     release: tokens.first().unwrap().to_string(),
-                    version: name_vers.next().unwrap().to_string(),
+                    version: Some(name_vers.next().unwrap().to_string()),
                     name: name_vers.last().unwrap().to_string(),
                 }
             })
@@ -115,8 +117,22 @@ impl Helm {
     }
 
     pub fn upgrade(&self, chart: &Chart) -> Result<()> {
-        let cmd = format!("helm upgrade --install --version {} {} stable/{}",
-                chart.version, chart.release, chart.name);
+        let cmd = if let Some(ref version) = chart.version {
+            format!("helm upgrade --install --version {} {} stable/{}",
+                version, chart.release, chart.name)
+        } else {
+            format!("helm upgrade --install {} stable/{}", chart.release, chart.name)
+        };
+        self.run(&cmd).map(|_| { () })
+    }
+
+    pub fn install(&self, chart: &Chart) -> Result<()> {
+        let cmd = if let Some(ref version) = chart.version {
+            format!("helm install --version {} --name {} stable/{}",
+                version, chart.release, chart.name)
+        } else {
+            format!("helm install --name {} stable/{}", chart.release, chart.name)
+        };
         self.run(&cmd).map(|_| { () })
     }
 
