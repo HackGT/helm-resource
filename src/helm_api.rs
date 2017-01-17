@@ -82,7 +82,7 @@ impl Helm {
             .output());
 
         // log things to stderr since stdout is reserved
-        try!(io::stderr().write(&output.stderr));
+        try!(io::stderr().write(&output.stdout));
 
         if !output.status.success() {
             return Err(Error::new(ErrorKind::Other, format!("failed to run `{}`", cmd)));
