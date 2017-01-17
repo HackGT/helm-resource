@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 extern crate rustache;
 extern crate serde;
 
@@ -71,34 +72,31 @@ impl Helm {
         Ok(Helm)
     }
 
-    pub fn get_digest(&self) -> Result<String> {
+    fn run(&self, cmd: &str) -> Result<String> {
         let output = try!(Command::new(BASH_PATH)
             .env("KUBECONFIG", KUBE_CONFIG_PATH)
             .arg("-c")
-            .arg("helm list | md5sum | cut -d' ' -f 1")
+            .arg(cmd)
             .output());
 
         // log things to stderr since stdout is reserved
         try!(io::stderr().write(&output.stderr));
 
         if !output.status.success() {
-            return Err(Error::new(ErrorKind::Other,
-                "failed to run 'helm list' as part of the check step"));
+            return Err(Error::new(ErrorKind::Other, format!("failed to run `{}`", cmd)));
         }
 
         Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
     }
 
-    pub fn charts(&self) -> Result<Vec<Chart>> {
-        let output = try!(Command::new(BASH_PATH)
-            .env("KUBECONFIG", KUBE_CONFIG_PATH)
-            .arg("-c")
-            .arg("helm list")
-            .output());
+    pub fn digest(&self) -> Result<String> {
+        self.run("helm list | md5sum | cut -d' ' -f 1")
+    }
 
-        let text_out = String::from_utf8_lossy(&output.stdout);
-
-        Ok(text_out
+    pub fn list(&self) -> Result<Vec<Chart>> {
+        let charts = self
+            .run("helm list")
+            .unwrap()
             .lines()
             .skip(1)
             .map(|line| {
@@ -111,6 +109,19 @@ impl Helm {
                     name: name_vers.last().unwrap().to_string(),
                 }
             })
-            .collect())
+            .collect();
+
+        Ok(charts)
+    }
+
+    pub fn upgrade(&self, chart: &Chart) -> Result<()> {
+        let cmd = format!("helm upgrade --install --version {} {} stable/{}",
+                chart.version, chart.release, chart.name);
+        self.run(&cmd).map(|_| { () })
+    }
+
+    pub fn delete(&self, release: &str) -> Result<()> {
+        let cmd = format!("helm delete {}", release);
+        self.run(&cmd).map(|_| { () })
     }
 }

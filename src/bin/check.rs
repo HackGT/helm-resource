@@ -21,7 +21,7 @@ fn main() {
 
     // get a digest of the current state of installed packages
     let response = vec![Version {
-        digest: helm.get_digest().unwrap(),
+        digest: helm.digest().unwrap(),
     }];
 
     // reply with a message

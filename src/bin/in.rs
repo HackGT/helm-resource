@@ -23,10 +23,10 @@ fn main() {
     let helm = Helm::configure(in_request.source).unwrap();
 
     // get the list of deployed charts
-    let deployed_charts = helm.charts().unwrap();
+    let deployed_charts = helm.list().unwrap();
 
     // get the digest
-    let digest = helm.get_digest().unwrap();
+    let digest = helm.digest().unwrap();
 
     // reply with a message
     let response = InResponse {
