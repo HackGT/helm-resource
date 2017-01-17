@@ -75,6 +75,9 @@ impl Helm {
     }
 
     fn run(&self, cmd: &str) -> Result<String> {
+        // log the command we're running
+        try!(io::stderr().write(format!("Running `{}`.\n", cmd).as_bytes()));
+
         let output = try!(Command::new(BASH_PATH)
             .env("KUBECONFIG", KUBE_CONFIG_PATH)
             .arg("-c")
@@ -83,6 +86,8 @@ impl Helm {
 
         // log things to stderr since stdout is reserved
         try!(io::stderr().write(&output.stdout));
+        try!(io::stderr().write(&output.stderr));
+        try!(io::stderr().flush());
 
         if !output.status.success() {
             return Err(Error::new(ErrorKind::Other, format!("failed to run `{}`", cmd)));
@@ -128,10 +133,10 @@ impl Helm {
 
     pub fn install(&self, chart: &Chart) -> Result<()> {
         let cmd = if let Some(ref version) = chart.version {
-            format!("helm install --version {} --name {} stable/{}",
+            format!("helm install --replace --version {} --name {} stable/{}",
                 version, chart.release, chart.name)
         } else {
-            format!("helm install --name {} stable/{}", chart.release, chart.name)
+            format!("helm install --replace --name {} stable/{}", chart.release, chart.name)
         };
         self.run(&cmd).map(|_| { () })
     }
