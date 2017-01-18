@@ -22,7 +22,7 @@ use std::process::Command;
 
 const KUBE_CONFIG: &'static str = include_str!("../templates/kube-config.mo");
 const KUBE_CONFIG_PATH: &'static str = "/tmp/kube-config";
-const BASH_PATH: &'static str = "/bin/bash";
+const SH_PATH: &'static str = "/bin/sh";
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Chart {
@@ -63,7 +63,7 @@ impl Helm {
         try!(file.flush());
 
         // init help
-        let mut init_helm_ps = try!(Command::new(BASH_PATH)
+        let mut init_helm_ps = try!(Command::new(SH_PATH)
             .env("KUBECONFIG", KUBE_CONFIG_PATH)
             .arg("-c")
             .arg("helm init --client-only 1>&2")
@@ -78,7 +78,7 @@ impl Helm {
         // log the command we're running
         try!(io::stderr().write(format!("Running `{}`.\n", cmd).as_bytes()));
 
-        let output = try!(Command::new(BASH_PATH)
+        let output = try!(Command::new(SH_PATH)
             .env("KUBECONFIG", KUBE_CONFIG_PATH)
             .arg("-c")
             .arg(cmd)

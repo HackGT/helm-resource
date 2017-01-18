@@ -1,11 +1,4 @@
-FROM scorpil/rust:1.15
-
-# Download kubectl
-ADD https://storage.googleapis.com/kubernetes-release/release/v1.3.4/bin/linux/amd64/kubectl \
-    /usr/local/bin/kubectl
-
-# Install kubectl
-RUN chmod +x /usr/local/bin/kubectl
+FROM busybox:musl
 
 # Download Helm
 ADD http://storage.googleapis.com/kubernetes-helm/helm-v2.1.3-linux-amd64.tar.gz \
@@ -17,12 +10,6 @@ RUN tar -C /tmp -xvf /tmp/helm.tar.gz && \
     chmod +x /bin/helm
 
 # Copy over data
-COPY . /root/helm-resource
-
-# Build the apps
-RUN cd /root/helm-resource && \
-    cargo build --release && \
-    mkdir -p /opt/resource/ && \
-    cp target/release/check /opt/resource/check && \
-    cp target/release/in /opt/resource/in && \
-    cp target/release/out /opt/resource/out
+COPY ./target/x86_64-unknown-linux-musl/release/check /opt/resource/check
+COPY ./target/x86_64-unknown-linux-musl/release/in /opt/resource/in
+COPY ./target/x86_64-unknown-linux-musl/release/out /opt/resource/out
