@@ -10,10 +10,10 @@ inputs:
 - name: helm-resource
 
 outputs:
-- name: target
+- name: build-output
 
 params:
-  CARGO_TARGET_DIR: ../target
+  CARGO_TARGET_DIR: ../build-output
 
 run:
   path: cargo

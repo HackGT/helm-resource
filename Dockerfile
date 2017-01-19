@@ -10,6 +10,6 @@ RUN tar -C /tmp -xvf /tmp/helm.tar.gz && \
     chmod +x /bin/helm
 
 # Copy over data
-COPY ../target/x86_64-unknown-linux-musl/release/check /opt/resource/check
-COPY ../target/x86_64-unknown-linux-musl/release/in /opt/resource/in
-COPY ../target/x86_64-unknown-linux-musl/release/out /opt/resource/out
+COPY ./build-output/x86_64-unknown-linux-musl/release/check /opt/resource/check
+COPY ./build-output/x86_64-unknown-linux-musl/release/in /opt/resource/in
+COPY ./build-output/x86_64-unknown-linux-musl/release/out /opt/resource/out
