@@ -33,7 +33,9 @@ pub struct Chart {
 
 pub type Charts = Vec<Chart>;
 
-pub struct Helm;
+pub struct Helm {
+    namespace: String,
+}
 
 impl Helm {
     pub fn configure(config: Source) -> Result<Self> {
@@ -50,7 +52,7 @@ impl Helm {
         if HashBuilder::new()
             .insert("skip_tls_verify", config.skip_tls_verify.unwrap_or(false))
             .insert("url", config.url)
-            .insert("namespace", config.namespace)
+            .insert("namespace", config.namespace.clone())
             .insert("username", config.username)
             .insert("password", config.password)
             .insert("ca_data", config.ca_data.unwrap_or(String::new()))
@@ -71,7 +73,9 @@ impl Helm {
 
         try!(init_helm_ps.wait());
 
-        Ok(Helm)
+        Ok(Helm {
+            namespace: config.namespace,
+        })
     }
 
     fn run(&self, cmd: &str) -> Result<String> {
@@ -123,20 +127,22 @@ impl Helm {
 
     pub fn upgrade(&self, chart: &Chart) -> Result<()> {
         let cmd = if let Some(ref version) = chart.version {
-            format!("helm upgrade --install --version {} {} stable/{}",
-                version, chart.release, chart.name)
+            format!("helm upgrade -i --namespace {} --version {} {} stable/{}",
+                self.namespace, version, chart.release, chart.name)
         } else {
-            format!("helm upgrade --install {} stable/{}", chart.release, chart.name)
+            format!("helm upgrade -i --namespace {} {} stable/{}",
+                self.namespace, chart.release, chart.name)
         };
         self.run(&cmd).map(|_| { () })
     }
 
     pub fn install(&self, chart: &Chart) -> Result<()> {
         let cmd = if let Some(ref version) = chart.version {
-            format!("helm install --replace --version {} --name {} stable/{}",
-                version, chart.release, chart.name)
+            format!("helm install --replace --namespace {} --version {} -n {} stable/{}",
+                self.namespace, version, chart.release, chart.name)
         } else {
-            format!("helm install --replace --name {} stable/{}", chart.release, chart.name)
+            format!("helm install --replace --namespace {} -n {} stable/{}",
+                self.namespace, chart.release, chart.name)
         };
         self.run(&cmd).map(|_| { () })
     }
