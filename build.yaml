@@ -1,24 +1,5 @@
-platform: linux
+docker:
+  repo: liuchong/rustup
+  tag: 'beta-musl'
 
-image_resource:
-  type: docker-image
-  source:
-    repository: liuchong/rustup
-    tag: 'beta-musl'
-
-inputs:
-- name: helm-resource
-
-outputs:
-- name: build-output
-
-params:
-  CARGO_TARGET_DIR: ../build-output
-
-run:
-  path: cargo
-  dir: helm-resource
-  args:
-    - build
-    - --release
-    - --target=x86_64-unknown-linux-musl
+run: cargo build --release --target=x86_64-unknown-linux-musl
