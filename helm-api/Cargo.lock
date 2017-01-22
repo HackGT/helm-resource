@@ -1,10 +1,9 @@
 [root]
-name = "helm-resource"
+name = "helm-api"
 version = "0.1.0"
 dependencies = [
  "base64 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "curl 0.4.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "error-type 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "md5 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "mktemp 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "rustache 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -67,11 +66,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [[package]]
 name = "error-chain"
 version = "0.7.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-
-[[package]]
-name = "error-type"
-version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
@@ -337,7 +331,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum curl-sys 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)" = "218a149208e1f4e5f7e20f1d0ed1e9431a086a6b4333ff95dba82237be9c283a"
 "checksum dtoa 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)" = "0dd841b58510c9618291ffa448da2e4e0f699d984d436122372f446dae62263d"
 "checksum error-chain 0.7.2 (registry+https://github.com/rust-lang/crates.io-index)" = "318cb3c71ee4cdea69fdc9e15c173b245ed6063e1709029e8fd32525a881120f"
-"checksum error-type 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)" = "1ff27640d2b446283471dc40a1a7ce0e650fdb94ded47ef32c0ac098b3187d4e"
 "checksum gcc 0.3.41 (registry+https://github.com/rust-lang/crates.io-index)" = "3689e1982a563af74960ae3a4758aa632bb8fd984cfc3cc3b60ee6109477ab6e"
 "checksum gdi32-sys 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "0912515a8ff24ba900422ecda800b52f4016a56251922d397c576bf92c690518"
 "checksum itoa 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "ae3088ea4baeceb0284ee9eea42f591226e6beaecf65373e41b38d95a1b8e7a1"

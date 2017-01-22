@@ -1,11 +1,8 @@
 #[macro_use] extern crate serde_derive;
-#[macro_use] extern crate error_type;
-extern crate curl;
+extern crate helm_api;
 
 #[path="../concourse_api.rs"]
 mod concourse_api;
-#[path="../helm_api.rs"]
-mod helm_api;
 
 use concourse_api::{
     CheckRequest,
@@ -18,7 +15,7 @@ fn main() {
     let check_request: CheckRequest = concourse_api::receive_message().unwrap();
 
     // set up helm to connect to our cluster
-    let helm = Helm::configure(check_request.source).unwrap();
+    let helm = Helm::configure(check_request.source.into()).unwrap();
 
     // get a digest of the current state of installed packages
     let response = vec![Version {

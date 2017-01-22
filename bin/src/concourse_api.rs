@@ -1,6 +1,6 @@
-#![allow(dead_code)]
 extern crate serde;
 extern crate serde_json;
+extern crate helm_api;
 
 use self::serde::{
     Deserialize,
@@ -10,6 +10,19 @@ use self::serde_json::error::Result as JsonResult;
 use std::io::{
     self,
 };
+
+impl ::std::convert::Into<helm_api::Config> for Source {
+    fn into(self) -> helm_api::Config {
+        helm_api::Config {
+            url: self.url,
+            username: self.username,
+            password: self.password,
+            namespace: self.namespace,
+            skip_tls_verify: self.skip_tls_verify,
+            ca_data: self.ca_data,
+        }
+    }
+}
 
 #[derive(Deserialize)]
 pub struct Source {

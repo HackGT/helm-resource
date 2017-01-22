@@ -1,21 +1,18 @@
-#![allow(dead_code)]
+#[macro_use] extern crate serde_derive;
 extern crate rustache;
 extern crate serde;
 extern crate serde_json;
 extern crate curl;
 
-mod helm_error;
+mod error;
 
-use self::helm_error::HelmError;
+use self::error::HelmError;
 use self::serde::Deserialize;
 use self::serde_json::{
     Map,
     Value,
 };
 use self::curl::easy::Easy;
-use concourse_api::{
-    Source,
-};
 use self::rustache::{
     HashBuilder,
     Render,
@@ -52,8 +49,17 @@ pub struct Helm {
     skip_tls_verify: bool,
 }
 
+pub struct Config {
+    pub url: String,
+    pub username: String,
+    pub password: String,
+    pub namespace: String,
+    pub skip_tls_verify: Option<bool>,
+    pub ca_data: Option<String>,
+}
+
 impl Helm {
-    pub fn configure(config: Source) -> Result<Self, HelmError> {
+    pub fn configure(config: Config) -> Result<Self, HelmError> {
         // check invariants
         if config.ca_data.is_none() && !config.skip_tls_verify.unwrap_or(false) {
             return Err(HelmError::NoCaData);

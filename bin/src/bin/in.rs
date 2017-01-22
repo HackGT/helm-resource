@@ -1,10 +1,8 @@
 #[macro_use] extern crate serde_derive;
-#[macro_use] extern crate error_type;
+extern crate helm_api;
 
 #[path="../concourse_api.rs"]
 mod concourse_api;
-#[path="../helm_api.rs"]
-mod helm_api;
 
 use concourse_api::{
     InRequest,
@@ -20,7 +18,7 @@ fn main() {
     let in_request: InRequest = concourse_api::receive_message().unwrap();
 
     // set up helm to connect to our cluster
-    let helm = Helm::configure(in_request.source).unwrap();
+    let helm = Helm::configure(in_request.source.into()).unwrap();
 
     // get the list of deployed charts
     let deployed_charts = helm.list().unwrap();
