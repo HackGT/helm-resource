@@ -4,10 +4,16 @@ version = "0.1.0"
 authors = ["Michael Eden <themichaeleden@gmail.com>"]
 
 [dependencies]
-serde = "0.8"
-serde_derive = "0.8"
-serde_json = "0.8"
-rustache = "0.1"
+serde = "^0.8.22"
+serde_derive = "^0.8.22"
+serde_json = "^0.8.4"
+curl = "^0.4.3"
+base64 = "^0.3.0"
+md5 = "^0.3.2"
+mktemp = "^0.3.1"
+rustache = "^0.1.0"
+error-type = "^0.1.2"
+
 
 [[bin]]
 name = "check"
