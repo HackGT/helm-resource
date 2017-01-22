@@ -3,6 +3,7 @@ extern crate rustache;
 extern crate serde;
 extern crate serde_json;
 extern crate curl;
+extern crate md5;
 
 mod error;
 
@@ -13,6 +14,7 @@ use self::serde_json::{
     Value,
 };
 use self::curl::easy::Easy;
+use self::md5::Context;
 use self::rustache::{
     HashBuilder,
     Render,
@@ -205,9 +207,16 @@ impl Helm {
     }
 
     pub fn digest(&self) -> Result<String, HelmError> {
-        self.run("helm list | md5sum | cut -d' ' -f 1")
+        let mut hash = Context::new();
+        for chart in try!(self.list()) {
+            hash.consume(chart.release);
+            hash.consume(chart.name);
+            if let Some(version) = chart.version {
+                hash.consume(version);
+            }
+        }
+        Ok(format!("{:x}", hash.compute()))
     }
-
 
     pub fn upgrade(&self, chart: &Chart) -> Result<(), HelmError> {
         let cmd = if let Some(ref version) = chart.version {
