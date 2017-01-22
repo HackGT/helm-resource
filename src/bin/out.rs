@@ -1,5 +1,6 @@
-#[macro_use]
-extern crate serde_derive;
+#[macro_use] extern crate serde_derive;
+#[macro_use] extern crate error_type;
+
 
 #[path="../concourse_api.rs"]
 mod concourse_api;
