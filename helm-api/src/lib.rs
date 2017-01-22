@@ -148,7 +148,7 @@ impl Helm {
         }
     }
 
-    fn list_deployments(&self) -> Result<Vec<Chart>, HelmError> {
+    pub fn list(&self) -> Result<Vec<Chart>, HelmError> {
         let deployments_api = Path::new(&self.server)
             .join("/apis/extensions/v1beta1/namespaces/")
             .join(&self.namespace)
@@ -208,26 +208,6 @@ impl Helm {
         self.run("helm list | md5sum | cut -d' ' -f 1")
     }
 
-    pub fn list(&self) -> Result<Vec<Chart>, HelmError> {
-        let charts = self
-            .run("helm list")
-            .unwrap()
-            .lines()
-            .skip(1)
-            .map(|line| {
-                let tokens: Vec<&str> = line.split_whitespace().collect();
-                let mut name_vers = tokens.last().unwrap().rsplitn(2, '-');
-
-                Chart {
-                    release: tokens.first().unwrap().to_string(),
-                    version: Some(name_vers.next().unwrap().to_string()),
-                    name: name_vers.last().unwrap().to_string(),
-                }
-            })
-            .collect();
-
-        Ok(charts)
-    }
 
     pub fn upgrade(&self, chart: &Chart) -> Result<(), HelmError> {
         let cmd = if let Some(ref version) = chart.version {
