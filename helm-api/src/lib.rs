@@ -211,13 +211,15 @@ impl Helm {
                             .unwrap_or(false)
                     })
                     .map(|labels| {
-                        labels.get("release").and_then(|release| {
+                        labels.get("release")
+                            .and_then(Value::as_str)
+                            .and_then(|release| {
                             labels.get("chart")
                                 .and_then(Value::as_str)
                                 .map(|c| c.rsplitn(2, '-'))
                                 .and_then(|mut split| {
-                                    split.next().and_then(|chart_name| {
-                                        split.last().map(|version| {
+                                    split.next().and_then(|version| {
+                                        split.last().map(|chart_name| {
                                             Chart {
                                                 release: release.to_string(),
                                                 name: chart_name.to_string(),
