@@ -1,5 +1,5 @@
 docker:
-  repo: ekidd/rust-musl-builder
-  tag: beta
+  repo: clux/muslrust
+  tag: latest
 
 run: cd bin; cargo build --release
