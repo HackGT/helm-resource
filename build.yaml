@@ -1,5 +1,5 @@
 docker:
-  repo: liuchong/rustup
-  tag: 'beta-musl'
+  repo: ekidd/rust-musl-builder
+  tag: beta
 
-run: cd bin; cargo build --release --target=x86_64-unknown-linux-musl
+run: cd bin; cargo build --release

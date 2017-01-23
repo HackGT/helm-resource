@@ -1,4 +1,4 @@
-FROM busybox:musl
+FROM alpine
 
 # Download Helm
 ADD http://storage.googleapis.com/kubernetes-helm/helm-v2.1.3-linux-amd64.tar.gz \
@@ -10,6 +10,5 @@ RUN tar -C /tmp -xvf /tmp/helm.tar.gz && \
     chmod +x /bin/helm
 
 # Copy over data
-COPY ./target/x86_64-unknown-linux-musl/release/check /opt/resource/check
-COPY ./target/x86_64-unknown-linux-musl/release/in /opt/resource/in
-COPY ./target/x86_64-unknown-linux-musl/release/out /opt/resource/out
+COPY ./bin/target/x86_64-unknown-linux-musl/release/helm-resource /opt/resource/
+COPY ./scripts/* /opt/resource/

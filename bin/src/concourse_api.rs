@@ -1,4 +1,3 @@
-#![allow(dead_code)]
 extern crate serde;
 extern crate serde_json;
 extern crate helm_api;

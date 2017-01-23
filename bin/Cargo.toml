@@ -9,15 +9,6 @@ serde_derive = "^0.8.22"
 serde_json = "^0.8.4"
 helm-api = { path = "../helm-api" }
 
-
 [[bin]]
-name = "check"
-path = "src/bin/check.rs"
-
-[[bin]]
-name = "in"
-path = "src/bin/in.rs"
-
-[[bin]]
-name = "out"
-path = "src/bin/out.rs"
+name = "helm-resource"
+path = "src/main.rs"
