@@ -2,4 +2,4 @@ docker:
   repo: clux/muslrust
   tag: latest
 
-run: cd bin; cargo build --release
+run: ./build.sh
