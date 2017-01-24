@@ -12,3 +12,4 @@ RUN tar -C /tmp -xvf /tmp/helm.tar.gz && \
 # Copy over data
 COPY ./bin/target/x86_64-unknown-linux-musl/release/helm-resource /opt/resource/
 COPY ./scripts/* /opt/resource/
+COPY ./ca-certs.crt /etc/ssl/certs/ca-certificates.crt

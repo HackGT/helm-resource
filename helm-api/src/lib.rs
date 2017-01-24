@@ -113,8 +113,11 @@ impl Helm {
             kube_ca_cert: ca_cert_path,
         };
 
-        // init help
+        // init helm
         try!(helm.run("helm init --client-only 1>&2"));
+
+        // update helm repos
+        try!(helm.run("helm repo update"));
 
         Ok(helm)
     }
