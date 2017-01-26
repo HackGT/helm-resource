@@ -2,6 +2,7 @@
 extern crate rustache;
 extern crate serde;
 extern crate serde_json;
+extern crate serde_yaml;
 extern crate curl;
 extern crate md5;
 extern crate mktemp;
@@ -10,6 +11,7 @@ extern crate url;
 
 mod error;
 
+use std::collections::HashMap;
 use self::error::HelmError;
 use self::serde::Deserialize;
 use self::serde_json::{
@@ -39,11 +41,12 @@ const KUBE_CONFIG: &'static str = include_str!("../templates/kube-config.mo");
 const SH_PATH: &'static str = "/bin/sh";
 
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Chart {
     pub release: String,
     pub name: String,
     pub version: Option<String>,
+    pub overrides: Option<HashMap<String, Value>>,
 }
 
 pub type Charts = Vec<Chart>;
@@ -227,6 +230,7 @@ impl Helm {
                                                 release: release.to_string(),
                                                 name: chart_name.to_string(),
                                                 version: Some(version.to_string()),
+                                                overrides: None,
                                             }
                                         })
                                     })
@@ -252,25 +256,46 @@ impl Helm {
     }
 
     pub fn upgrade(&self, chart: &Chart) -> Result<(), HelmError> {
-        let cmd = if let Some(ref version) = chart.version {
-            format!("helm upgrade -i --namespace {} --version {} {} stable/{}",
-                self.namespace, version, chart.release, chart.name)
-        } else {
-            format!("helm upgrade -i --namespace {} {} stable/{}",
-                self.namespace, chart.release, chart.name)
-        };
-        self.run(&cmd).map(|_| { () })
-    }
+        let mut cmd = vec![];
 
-    pub fn install(&self, chart: &Chart) -> Result<(), HelmError> {
-        let cmd = if let Some(ref version) = chart.version {
-            format!("helm install --replace --namespace {} --version {} -n {} stable/{}",
-                self.namespace, version, chart.release, chart.name)
+        // start of the command
+        cmd.push(format!("helm upgrade -i --namespace {}", self.namespace));
+
+        if let Some(ref version) = chart.version {
+            cmd.push(format!("--version {}", version));
+        }
+
+        let overrides_file = if let Some(ref overrides) = chart.overrides {
+            let override_path = try!(Temp::new_file());
+
+            // set values file flag
+            cmd.push(format!("--values {}",
+                override_path.to_path_buf().to_string_lossy().into_owned()));
+
+            // write the overrides to the file
+            let mut overrides_file = try!(File::create(&override_path));
+            try!(serde_yaml::to_writer(&mut overrides_file, overrides));
+            try!(overrides_file.flush());
+
+            // log values used
+            try!(io::stderr().write_fmt(format_args!("Using values:\n{}\n",
+                try!(serde_yaml::to_string(overrides)))));
+
+            Some(override_path)
         } else {
-            format!("helm install --replace --namespace {} -n {} stable/{}",
-                self.namespace, chart.release, chart.name)
+            None
         };
-        self.run(&cmd).map(|_| { () })
+
+        // end of the command
+        cmd.push(format!("{} stable/{}", chart.release, chart.name));
+
+        try!(self.run(&cmd.join(" ")).map(|_| { () }));
+
+        // cleanup resources
+        if let Some(mut file) = overrides_file {
+            file.release();
+        }
+        Ok(())
     }
 
     pub fn delete(&self, release: &str) -> Result<(), HelmError> {

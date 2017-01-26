@@ -1,13 +1,14 @@
 #[macro_use] extern crate serde_derive;
 extern crate helm_api;
+extern crate serde_json;
 
 mod concourse_api;
 
-use std::hash::Hash;
 use std::env::args;
 use std::collections::{
     HashMap,
 };
+use serde_json::Value;
 use concourse_api::{
     CheckRequest,
     InRequest,
@@ -87,26 +88,25 @@ fn request_out() {
             release: k,
             name: v.name,
             version: v.version,
+            overrides: v.overrides,
         })
         .collect();
 
-    // get a diff of everything
-    let chart_diff = diff(deployed_charts, target_charts, |c| c.release.to_string());
-
-    let all_but_deleted = chart_diff.changed.iter()
-        .chain(chart_diff.unchanged.iter())
-        .chain(chart_diff.added.iter());
+    // find which charts are deleted
+    let removed_charts = deployed_charts.into_iter().filter(|chart| {
+        !target_charts.iter().any(|c| c.release == chart.release)
+    });
 
     // run upgrade for added, changed and unchanged charts.
     // this is because its hard to know what overrides were used
     // during the initial install, and what the current version is,
     // e.g. is it 'latest'?
     // upgrading a chart that is not installed will install it.
-    for upgraded in all_but_deleted {
-        helm.upgrade(&upgraded).unwrap();
+    for to_install in &target_charts {
+        helm.upgrade(to_install).unwrap();
     }
 
-    for deleted in chart_diff.removed {
+    for deleted in removed_charts {
         helm.delete(&deleted.release).unwrap();
     }
 
@@ -132,51 +132,11 @@ fn request_out() {
 struct ChartSpec {
     name: String,
     version: Option<String>,
+    overrides: Option<HashMap<String, Value>>,
 }
 
 #[derive(Deserialize)]
 struct Params {
     charts: HashMap<String, ChartSpec>,
-}
-
-#[derive(Debug)]
-struct Diff<E> {
-    added: Vec<E>,
-    changed: Vec<E>,
-    unchanged: Vec<E>,
-    removed: Vec<E>,
-}
-
-fn diff<E, K, F>(initial: Vec<E>, next: Vec<E>, key: F) -> Diff<E>
-where E: Eq + PartialEq,
-      K: Hash + Eq,
-      F: Fn(&E) -> K,
-{
-
-    let mut added = Vec::new();
-    let mut changed = Vec::new();
-    let mut unchanged = Vec::new();
-
-    let mut original = HashMap::new();
-    for item in initial {
-        original.insert(key(&item), item);
-    }
-
-    for item in next {
-        match original.remove(&key(&item)) {
-            Some(ref old) if *old != item => changed.push(item),
-            Some(_) => unchanged.push(item),
-            None => added.push(item),
-        }
-    }
-
-    let removed = original.drain().map(|(_, v)| v).collect();
-
-    Diff {
-        added: added,
-        changed: changed,
-        unchanged: unchanged,
-        removed: removed,
-    }
 }
 

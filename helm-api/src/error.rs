@@ -7,6 +7,7 @@ use self::serde_json::Value;
 use super::url::ParseError;
 pub use super::rustache::RustacheError;
 pub use super::curl::Error as CurlError;
+pub use super::serde_yaml::Error as YamlError;
 pub use std::io::Error as IoError;
 
 #[derive(Debug)]
@@ -16,6 +17,7 @@ pub enum HelmError {
     Net(CurlError),
     CmdFailed(String),
     UrlParse(ParseError),
+    Yaml(YamlError),
     NoCaData,
     WrongKubeApiFormat(Map<String, Value>),
 }
@@ -39,6 +41,7 @@ impl Error for HelmError {
             (&HelmError::Io(_), None) => unreachable!(),
             (&HelmError::Net(_), None) => unreachable!(),
             (&HelmError::UrlParse(_), None) => unreachable!(),
+            (&HelmError::Yaml(_), None) => unreachable!(),
             (&HelmError::FailedToCreateKubeConfig(_), _) => "rustache templating error",
             (&HelmError::CmdFailed(ref cmd), _) => cmd,
             (&HelmError::WrongKubeApiFormat(_), _) => "could not parse k8s api",
@@ -51,6 +54,7 @@ impl Error for HelmError {
             HelmError::Io(ref e) => Some(e),
             HelmError::Net(ref e) => Some(e),
             HelmError::UrlParse(ref e) => Some(e),
+            HelmError::Yaml(ref e) => Some(e),
             _ => None,
         }
     }
@@ -77,5 +81,11 @@ impl From<CurlError> for HelmError {
 impl From<ParseError> for HelmError {
     fn from(e: ParseError) -> Self {
         HelmError::UrlParse(e)
+    }
+}
+
+impl From<YamlError> for HelmError {
+    fn from(e: YamlError) -> Self {
+        HelmError::Yaml(e)
     }
 }
