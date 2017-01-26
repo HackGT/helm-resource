@@ -93,16 +93,21 @@ fn request_out() {
     // get a diff of everything
     let chart_diff = diff(deployed_charts, target_charts, |c| c.release.to_string());
 
-    for upgraded in chart_diff.changed {
+    let all_but_deleted = chart_diff.changed.iter()
+        .chain(chart_diff.unchanged.iter())
+        .chain(chart_diff.added.iter());
+
+    // run upgrade for added, changed and unchanged charts.
+    // this is because its hard to know what overrides were used
+    // during the initial install, and what the current version is,
+    // e.g. is it 'latest'?
+    // upgrading a chart that is not installed will install it.
+    for upgraded in all_but_deleted {
         helm.upgrade(&upgraded).unwrap();
     }
 
     for deleted in chart_diff.removed {
         helm.delete(&deleted.release).unwrap();
-    }
-
-    for added in chart_diff.added {
-        helm.install(&added).unwrap();
     }
 
     // send back a response
@@ -138,6 +143,7 @@ struct Params {
 struct Diff<E> {
     added: Vec<E>,
     changed: Vec<E>,
+    unchanged: Vec<E>,
     removed: Vec<E>,
 }
 
@@ -146,8 +152,10 @@ where E: Eq + PartialEq,
       K: Hash + Eq,
       F: Fn(&E) -> K,
 {
+
     let mut added = Vec::new();
     let mut changed = Vec::new();
+    let mut unchanged = Vec::new();
 
     let mut original = HashMap::new();
     for item in initial {
@@ -157,8 +165,8 @@ where E: Eq + PartialEq,
     for item in next {
         match original.remove(&key(&item)) {
             Some(ref old) if *old != item => changed.push(item),
+            Some(_) => unchanged.push(item),
             None => added.push(item),
-            _ => continue,
         }
     }
 
@@ -167,6 +175,7 @@ where E: Eq + PartialEq,
     Diff {
         added: added,
         changed: changed,
+        unchanged: unchanged,
         removed: removed,
     }
 }
