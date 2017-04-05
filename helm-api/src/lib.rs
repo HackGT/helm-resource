@@ -192,10 +192,10 @@ impl Helm {
 
         let deployments: Map<String, Value> = try!(self.kube_api(&deployments_api.into_string()));
 
-        deployments
+        Ok(deployments
             .get("items")
             .and_then(Value::as_array)
-            .map(|items| {
+            .map_or(Vec::new(), |items| {
                 items.iter()
                     .map(Value::as_object).filter_map(|i| i)
                     .map(|o| o.get("metadata")).filter_map(|i| i)
@@ -239,8 +239,7 @@ impl Helm {
                     })
                     .filter_map(|i| i)
                     .collect()
-            })
-            .ok_or(HelmError::WrongKubeApiFormat(deployments))
+            }))
     }
 
     pub fn digest(&self) -> Result<String, HelmError> {
